@@ -70,18 +70,18 @@ void image3() {
   popMatrix();
   
   pushMatrix();
-  translate(440, 180);
+  translate(440, 260);
   rotate(radians(angleRotate));
   //text(int(angleRotate) % 360 + " DEGREES", 0, 0);
   image(img2, 0, 0, 300, 300);
   line(0, 0, 150, 0);
   popMatrix();
   
-  angleRotate += 3;
+  angleRotate += 1.5;
 
   stroke(255, 0, 0);
   strokeWeight(4);
   //point(100, 180);
   point(200, 180);
-  point(440, 180);
+  point(440, 260);
 }
