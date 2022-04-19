@@ -1,44 +1,188 @@
 PImage bg;
-PImage motorGear, rightGear, middleGear;
-PImage lever, button, buttonPush;
+PImage lever_base, lever_cut, button, buttonPush;
 float angleRotate = 0.0;
+ImageDragNDrop middleGear, motorGear, rightGear;
 
-void setAllImages() {
-  middleGear = loadImage("engrenage.png");
-  rightGear = loadImage("Steampunk-Gear_3.png");
-  motorGear = loadImage("Steampunk-Gear_4.png");
-  
-  lever = loadImage("Lever.png");
+//Création d'une classe ImageDragNDrop
+class ImageDragNDrop{
+  String path;
+  PImage image;
+
+  boolean isPlaced;
+  boolean isDrag;
+
+  /*
+  * Position du drag
+  */
+  //Position hitbox 
+  float sx; //x
+  float sy; //y
+
+  //Position img
+  float ix; //x
+  float iy; //y
+
+  //Position de base de l'img
+  float bx;
+  float by;
+
+  float w; //width
+  float h; //height
+
+  /*
+  * Position de l'objet placé
+  */
+  //Position hitbox
+  float hx; //x
+  float hy; //y
+  float hw; //width
+  float hh; //height
+
+  //Position img
+  float px;
+  float py;
+
+  int direction; //sens de rotation de l'objet placé
+
+  /*
+  * imagePath => chemin de l'image
+  * x, y => coordonnées de l'image à drag and drop
+  * w, h => width et height de l'image à drag and drop
+  * hx, hy => coordonnées de l'image placé
+  * hw, hh => width et height de la hitbox pour placer l'image
+  */
+  public ImageDragNDrop(String imagePath, float x, float y, float w, float h, float px, float py, float hw, float hh, int direction){
+    this.path = imagePath;
+
+    this.sx = x-(w/2);
+    this.sy = y-(h/2);
+
+    this.ix = x;
+    this.iy = y;
+
+    this.bx = x;
+    this.by = y;
+
+    this.w = w;
+    this.h = h;
+
+    this.hx = px-(hw/2);
+    this.hy = py-(hh/2);
+    this.hw = hw;
+    this.hh = hh;
+    this.px = px;
+    this.py = py;
+
+    this.isPlaced = false;
+
+    this.direction = direction;
+  }
+
+  void ImageSetup(){
+    image = loadImage(path);
+    image(this.image, this.ix, this.iy, this.w, this.h);
+  }
+
+  void drag(boolean rotate, boolean canBePlaced, boolean canBeDrag){
+    if(this.isPlaced){
+      makeGear(this.image, this.px, this.py, this.w, this.h, direction, rotate);
+    }else{
+      if(canBeDrag){
+        if(isCollide(mouseX, mouseY, this.sx, this.sy, this.w, this.h)){
+          if(mousePressed){
+            image(this.image, mouseX, mouseY, this.w, this.h);
+            setHitboxPosition(mouseX, mouseY);
+            setImagePosition(mouseX, mouseY);
+            this.isDrag = true;
+          }else if(isCollide(this.ix, this.iy, this.hx, this.hy, this.hw, this.hh) && this.isPlaced == false && canBePlaced){
+            this.isPlaced = true;
+            this.isDrag = false;
+          }else{
+            image(this.image, this.ix, this.iy, this.w, this.h);
+            setHitboxPosition(bx, by);
+            setImagePosition(bx, by);
+            this.isDrag = false;
+          }
+        }else{
+          image(this.image, this.ix, this.iy, this.w, this.h);
+          setHitboxPosition(bx, by);
+          setImagePosition(bx, by);
+          this.isDrag = false;
+        }
+      }else{
+        image(this.image, this.ix, this.iy, this.w, this.h);
+        setHitboxPosition(bx, by);
+        setImagePosition(bx, by);
+        this.isDrag = false;
+      }
+    }
+  }
+
+  void setHitboxPosition(float x, float y){
+    this.sx = x-(this.w/2);
+    this.sy = y-(this.h/2);
+  }
+
+  void setImagePosition(float x, float y){
+    this.ix = x;
+    this.iy = y;
+  }
+}
+
+
+//Permet de savoir si le curseur est sur la hitbox
+boolean isCollide(float x, float y, float rx, float ry, float rw, float rh) {
+
+  if (x >= rx &&        
+      x <= rx + rw &&   
+      y >= ry &&        
+      y <= ry + rh) {
+        return true;
+  }
+  return false;
+}
+
+void setAllGears() {
+  rightGear = new ImageDragNDrop("Steampunk-Gear_3.png", 680, 100, 190, 190, 476, 464, 200, 200, 1);
+  rightGear.ImageSetup();
+  middleGear = new ImageDragNDrop("engrenage.png", 680, 250, 190, 190, 320, 420, 190, 190, -1);
+  middleGear.ImageSetup();
+  motorGear = new ImageDragNDrop("Steampunk-Gear_4.png", 680, 400, 190, 190, 177, 435, 200, 200, 1);
+  motorGear.ImageSetup();
+}
+
+void setAllImages(){
+  lever_base = loadImage("Lever_base.png");
+  lever_cut = loadImage("Lever_cut.png");
   button = loadImage("Button-S.png");
   buttonPush = loadImage("Button-S-push.png");
-  
-  imageMode(CENTER);
 }
 
 void setup()
 {
   size(800,550);
   bg = loadImage("bg.png");
-  
   setAllImages();
-  
-  frameRate(3);
+  setAllGears();
+  imageMode(CENTER);
+  frameRate(100);
 }
 
 void draw()
 {
-    background(bg);
-    mecanism();
+  background(bg);
+  mecanism();
 }  
 
 void mecanism() {
-  makeGear(middleGear, 320, 420, 190, 190, -1);
-  makeGear(motorGear, 177, 435, 200, 200, 1);
-  makeGear(rightGear, 476, 464, 200, 200, 1);
-  
+
   pushMatrix();
   translate(475, 305);
-  image(lever, 0, 0, 107, 107);
+  image(lever_base, 0, 0, 107, 107);
+  popMatrix();
+  pushMatrix();
+  translate(475, 305);
+  image(lever_cut, 0, 0, 107, 107);
   popMatrix();
   
   for (int i = 0; i < 3; i = i+1) {
@@ -47,14 +191,48 @@ void mecanism() {
     image(button, 0, 0, 55, 55);
     popMatrix();
   }
-  
-  angleRotate += 1.5;
+
+  if(motorGear.isPlaced && rightGear.isPlaced){
+    if(motorGear.isDrag || rightGear.isDrag){
+      middleGear.drag(true, true, false);
+    }else{
+      middleGear.drag(true, true, true);
+    }
+  }else{
+    if(motorGear.isDrag || rightGear.isDrag){
+      middleGear.drag(true, false, false);
+    }else{
+      middleGear.drag(true, false, true);
+    }
+  }
+  if(motorGear.isPlaced && middleGear.isPlaced){
+    if(motorGear.isDrag || middleGear.isDrag){
+      rightGear.drag(true, true, false);
+    }else{
+      rightGear.drag(true, true, true);
+    }
+  }else{
+    if(motorGear.isDrag || middleGear.isDrag){
+      rightGear.drag(false, true, false);
+    }else{
+      rightGear.drag(false, true, true);
+    }
+  }
+  if(middleGear.isDrag || rightGear.isDrag){
+    motorGear.drag(true, true, false);
+  }else{
+    motorGear.drag(true, true, true);
+  }
+
+  angleRotate += 0.5;
 }
 
-void makeGear(PImage img, int x, int y, int scale_x, int scale_y, int direction) {
+void makeGear(PImage img, float x, float y, float scale_x, float scale_y, int direction, boolean rotate) {
   pushMatrix();
   translate(x, y);
-  rotate(radians(angleRotate * direction));
+  if(rotate){
+    rotate(radians(angleRotate * direction));
+  }
   image(img, 0, 0, scale_x, scale_y);
   popMatrix();
 }
