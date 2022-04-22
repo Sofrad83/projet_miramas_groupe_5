@@ -1,7 +1,8 @@
 PImage bg;
-PImage lever_base, lever_cut, button, buttonPush;
+PImage lever_base, button, buttonPush;
 float angleRotate = 0.0;
 ImageDragNDrop middleGear, motorGear, rightGear;
+ImageRotate lever_cut;
 
 //Création d'une classe ImageDragNDrop
 class ImageDragNDrop{
@@ -129,6 +130,90 @@ class ImageDragNDrop{
   }
 }
 
+class ImageRotate{
+  String path;
+  PImage image;
+  boolean isDrag;
+
+  /*
+  * Position du drag
+  */
+  //Position hitbox 
+  float sx; //x
+  float sy; //y
+  float sw; //width
+  float sh; //height
+
+  //Position img
+  float x; //x
+  float y; //y
+
+  float w; //width
+  float h; //height
+
+  float angleRotate;
+  int mouse_x;
+
+  public ImageRotate(String imagePath, float x, float y, float w, float h, float sx, float sy, float sw, float sh){
+    this.path = imagePath;
+
+    this.sx = sx;
+    this.sy = sy;
+    this.sw = sw;
+    this.sh = sh;
+
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    
+    this.angleRotate = 0.0;
+    this.isDrag = false;
+  }
+
+  void ImageSetup(){
+    image = loadImage(path);
+    image(this.image, this.x, this.y, this.w, this.h);
+  }
+
+  void drag(){
+    if(isCollide(mouseX, mouseY, this.sx, this.sy, this.sw, this.sh)){
+      if(mousePressed){
+        this.angleRotate = angleRotate;
+        if(this.x-50 > mouseX){
+          this.angleRotate -= 2;
+        }else if(this.x+50 < mouseX){
+          this.angleRotate += 2;
+        }
+        setHitboxPosition(mouseX, mouseY);
+        pushMatrix();
+        translate(this.x, this.y);
+        rotate(radians(angleRotate));
+        image(this.image, 0, 0, this.w, this.h);
+        popMatrix();
+        this.mouse_x = mouseX;
+        this.isDrag = true;
+      }else{
+        translate(this.x, this.y);
+        rotate(radians(angleRotate));
+        image(this.image, 0, 0, this.w, this.h);
+        setHitboxPosition(this.x, this.y);
+        this.isDrag = false;
+      }
+    }else{
+      translate(this.x, this.y);
+      rotate(radians(angleRotate));
+      image(this.image, 0, 0, this.w, this.h);
+      setHitboxPosition(this.x, this.y);
+      this.isDrag = false;
+    }
+  }
+
+  void setHitboxPosition(float x, float y){
+    this.sx = x-(this.sw/2);
+    this.sy = y-(this.sh/2);
+  }
+}
 
 //Permet de savoir si le curseur est sur la hitbox
 boolean isCollide(float x, float y, float rx, float ry, float rw, float rh) {
@@ -149,11 +234,14 @@ void setAllGears() {
   middleGear.ImageSetup();
   motorGear = new ImageDragNDrop("Steampunk-Gear_4.png", 680, 400, 190, 190, 177, 435, 200, 200, 1);
   motorGear.ImageSetup();
+
+  lever_cut = new ImageRotate("Lever_cut_2.png", 475, 305, 107, 107, 475, 305, 107, 107);
+  lever_cut.ImageSetup();
 }
 
 void setAllImages(){
   lever_base = loadImage("Lever_base.png");
-  lever_cut = loadImage("Lever_cut.png");
+  //lever_cut = loadImage("Lever_cut.png");
   button = loadImage("Button-S.png");
   buttonPush = loadImage("Button-S-push.png");
 }
@@ -180,10 +268,11 @@ void mecanism() {
   translate(475, 305);
   image(lever_base, 0, 0, 107, 107);
   popMatrix();
-  pushMatrix();
+  /*pushMatrix();
   translate(475, 305);
+  rotate(radians(angleRotate));
   image(lever_cut, 0, 0, 107, 107);
-  popMatrix();
+  popMatrix();*/
   
   for (int i = 0; i < 3; i = i+1) {
     pushMatrix();
@@ -199,30 +288,32 @@ void mecanism() {
       middleGear.drag(true, true, true);
     }
   }else{
-    if(motorGear.isDrag || rightGear.isDrag){
+    if(motorGear.isDrag || rightGear.isDrag || lever_cut.isDrag){
       middleGear.drag(true, false, false);
     }else{
       middleGear.drag(true, false, true);
     }
   }
   if(motorGear.isPlaced && middleGear.isPlaced){
-    if(motorGear.isDrag || middleGear.isDrag){
+    if(motorGear.isDrag || middleGear.isDrag || lever_cut.isDrag){
       rightGear.drag(true, true, false);
     }else{
       rightGear.drag(true, true, true);
     }
   }else{
-    if(motorGear.isDrag || middleGear.isDrag){
+    if(motorGear.isDrag || middleGear.isDrag || lever_cut.isDrag){
       rightGear.drag(false, true, false);
     }else{
       rightGear.drag(false, true, true);
     }
   }
-  if(middleGear.isDrag || rightGear.isDrag){
+  if(middleGear.isDrag || rightGear.isDrag || lever_cut.isDrag){
     motorGear.drag(true, true, false);
   }else{
     motorGear.drag(true, true, true);
   }
+
+  lever_cut.drag();
 
   angleRotate += 0.5;
 }
