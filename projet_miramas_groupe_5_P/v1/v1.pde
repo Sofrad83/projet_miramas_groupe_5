@@ -1,8 +1,10 @@
 PImage bg;
-PImage lever_base, button, buttonPush;
+PImage lever_base, button, buttonPush, btn_vert, btn_orange, btn_rouge, horloge;
 float angleRotate = 0.0;
+float speedRotate = 0.0;
 ImageDragNDrop middleGear, motorGear, rightGear;
 ImageRotate lever_cut;
+boolean canBePush;
 
 //Création d'une classe ImageDragNDrop
 class ImageDragNDrop{
@@ -180,11 +182,12 @@ class ImageRotate{
     if(isCollide(mouseX, mouseY, this.sx, this.sy, this.sw, this.sh)){
       if(mousePressed){
         this.angleRotate = angleRotate;
-        if(this.x-50 > mouseX){
+        if(this.x-50 > mouseX && this.angleRotate > -40){
           this.angleRotate -= 2;
-        }else if(this.x+50 < mouseX){
+        }else if(this.x+50 < mouseX && this.angleRotate < 300){
           this.angleRotate += 2;
         }
+        speedRotate = angleRotate/50;
         setHitboxPosition(mouseX, mouseY);
         pushMatrix();
         translate(this.x, this.y);
@@ -228,28 +231,33 @@ boolean isCollide(float x, float y, float rx, float ry, float rw, float rh) {
 }
 
 void setAllGears() {
-  rightGear = new ImageDragNDrop("Steampunk-Gear_3.png", 680, 100, 190, 190, 476, 464, 200, 200, 1);
+  rightGear = new ImageDragNDrop("Steampunk-Gear_3.png", 1496, 170, 400, 400, 1108, 912, 480, 480, 1);
   rightGear.ImageSetup();
-  middleGear = new ImageDragNDrop("engrenage.png", 680, 250, 190, 190, 320, 420, 190, 190, -1);
+  middleGear = new ImageDragNDrop("engrenage.png", 1496, 510, 400, 400, 800, 800, 456, 456, -1);
   middleGear.ImageSetup();
-  motorGear = new ImageDragNDrop("Steampunk-Gear_4.png", 680, 400, 190, 190, 177, 435, 200, 200, 1);
+  motorGear = new ImageDragNDrop("Steampunk-Gear_4.png", 1496, 840, 400, 400, 520, 860, 480, 480, 1);
   motorGear.ImageSetup();
 
-  lever_cut = new ImageRotate("Lever_cut_2.png", 475, 305, 107, 107, 475, 305, 107, 107);
+  lever_cut = new ImageRotate("Lever_cut_2.png", 1114, 605, 257, 257, 1114, 605, 257, 257);
   lever_cut.ImageSetup();
 }
 
 void setAllImages(){
   lever_base = loadImage("Lever_base.png");
-  //lever_cut = loadImage("Lever_cut.png");
   button = loadImage("Button-S.png");
   buttonPush = loadImage("Button-S-push.png");
+  btn_vert = loadImage("btn-vert.png");
+  btn_rouge = loadImage("btn-rouge.png");
+  btn_orange = loadImage("btn-orange.png");
+  horloge = loadImage("Horlog.png");
 }
 
 void setup()
 {
-  size(800,550);
-  bg = loadImage("bg.png");
+  canBePush = false;
+  size(1920, 1080);
+  bg = loadImage("bg-big.png");
+  fullScreen();
   setAllImages();
   setAllGears();
   imageMode(CENTER);
@@ -265,19 +273,49 @@ void draw()
 void mecanism() {
 
   pushMatrix();
-  translate(475, 305);
-  image(lever_base, 0, 0, 107, 107);
+  translate(1106, 597);
+  image(lever_base, 0, 0, 225, 225);
   popMatrix();
-  /*pushMatrix();
-  translate(475, 305);
-  rotate(radians(angleRotate));
-  image(lever_cut, 0, 0, 107, 107);
-  popMatrix();*/
+
+  pushMatrix();
+  translate(723, 423);
+  image(horloge, 0, 0, 300, 300);
+  popMatrix();
+
+  pushMatrix();
+  translate(482, 429);
+  if(speedRotate >= 6.0){
+    canBePush = true;
+    image(btn_vert, 0, 0, 55, 55);
+  }else{
+    canBePush = false;
+    image(btn_vert, 0, 0, 0, 0);
+  }
+  popMatrix();
+  
+  pushMatrix();
+  translate(482, 429);
+  if(speedRotate >= 2.4 && speedRotate < 6.0){
+    image(btn_orange, 0, 0, 55, 55);
+  }else{
+    image(btn_orange, 0, 0, 0, 0);
+  }
+  popMatrix();
+
+  pushMatrix();
+  translate(482, 429);
+  if(speedRotate < 2.4){
+    image(btn_rouge, 0, 0, 55, 55);
+  }else{
+    image(btn_rouge, 0, 0, 0, 0);
+  }
+  
+  popMatrix();
   
   for (int i = 0; i < 3; i = i+1) {
     pushMatrix();
-    translate(463, 95 + i*60);
-    image(button, 0, 0, 55, 55);
+    translate(1085, 185 + i*120);
+    image(button, 0, 0, 110, 110);
     popMatrix();
   }
 
@@ -315,7 +353,7 @@ void mecanism() {
 
   lever_cut.drag();
 
-  angleRotate += 0.5;
+  angleRotate += speedRotate;
 }
 
 void makeGear(PImage img, float x, float y, float scale_x, float scale_y, int direction, boolean rotate) {
