@@ -1,10 +1,19 @@
-PImage bg;
-PImage lever_base, button, buttonPush, btn_vert, btn_orange, btn_rouge, horloge;
+PImage bg, lever_base, button, buttonPush, btn_vert, btn_orange, btn_rouge, horloge, egguille1, egguille2;
 float angleRotate = 0.0;
 float speedRotate = 0.0;
 ImageDragNDrop middleGear, motorGear, rightGear;
 ImageRotate lever_cut;
 boolean canBePush;
+Bouton btn1, btn2, btn3;
+IntList reponse = new IntList(2,3,1);
+IntList actuel = new IntList();
+boolean answerIsGood;
+float angleRotateEgguille1 = 0.0;
+float angleRotateEgguille2 = 0.0;
+float speedRotateEgguille1 = 0.1;
+float speedRotateEgguille2 = 0.1;
+boolean premier_tour = false;
+boolean deuxieme_tour = false;
 
 //Création d'une classe ImageDragNDrop
 class ImageDragNDrop{
@@ -132,6 +141,90 @@ class ImageDragNDrop{
   }
 }
 
+class Bouton{
+  String path_unclicked;
+  String path_clicked;
+  PImage clicked, unclicked;
+  int num;
+
+
+  //Position img et hitbox
+  float x; //x
+  float y; //y
+  float w;
+  float h;
+
+  //img unclicked
+  float uw;
+  float uh;
+
+  //img clicked
+  float cw; //width
+  float ch; //height
+
+  boolean isClicked = false;
+
+  public Bouton(String path_unclicked, String path_clicked, float x, float y, float w, float h, int num)
+  {
+    this.path_unclicked = path_unclicked;
+    this.path_clicked = path_clicked;
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.uw = w;
+    this.uh = h;
+    this.cw = 0;
+    this.ch = 0;
+    this.num = num;
+  }
+
+  void ImageSetup(){
+    this.clicked = loadImage(this.path_clicked);
+    image(this.clicked, this.x, this.y, this.w, this.h);
+    this.unclicked = loadImage(this.path_unclicked);
+    image(this.unclicked, this.x, this.y, this.w, this.h);
+  }
+
+  void onClick(){
+
+    if(isCollide(mouseX, mouseY, this.x-this.w/2, this.y-this.h/2, this.w, this.h)){
+      if(mousePressed){
+        if(isClicked == false){
+          isClicked = true;
+          
+          actuel.append(this.num);
+        }
+        
+      }
+    }
+    if(isClicked){
+      this.uw = 0;
+      this.uh = 0;
+      this.cw = this.w;
+      this.ch = this.h;
+    }else{
+      this.uw = this.w;
+      this.uh = this.h;
+      this.cw = 0;
+      this.ch = 0;
+    }
+    pushMatrix();
+    translate(this.x, this.y);
+    image(this.clicked, 0, 0, this.cw, this.ch);
+    popMatrix();
+    pushMatrix();
+    translate(this.x, this.y);
+    image(this.unclicked, 0, 0, this.uw, this.uh);
+    popMatrix();
+  }
+
+  void reset(){
+    isClicked = false;
+  }
+
+}
+
 class ImageRotate{
   String path;
   PImage image;
@@ -250,6 +343,19 @@ void setAllImages(){
   btn_rouge = loadImage("btn-rouge.png");
   btn_orange = loadImage("btn-orange.png");
   horloge = loadImage("Horlog.png");
+  egguille1 = loadImage("egguille1.png");
+  egguille2 = loadImage("egguille2.png");
+}
+
+void setBoutons(){
+  btn1 = new Bouton("Button-S.png", "Button-S-push.png", 1085, 185, 110, 110, 1);
+  btn1.ImageSetup();
+
+  btn2 = new Bouton("Button-S.png", "Button-S-push.png", 1085, 185+120, 110, 110, 2);
+  btn2.ImageSetup();
+
+  btn3 = new Bouton("Button-S.png", "Button-S-push.png", 1085, 185+120+120, 110, 110, 3);
+  btn3.ImageSetup();
 }
 
 void setup()
@@ -260,6 +366,7 @@ void setup()
   fullScreen();
   setAllImages();
   setAllGears();
+  setBoutons();
   imageMode(CENTER);
   frameRate(100);
 }
@@ -280,6 +387,18 @@ void mecanism() {
   pushMatrix();
   translate(723, 423);
   image(horloge, 0, 0, 300, 300);
+  popMatrix();
+
+  pushMatrix();
+  translate(723, 423);
+  rotate(radians(angleRotateEgguille2));
+  image(egguille2, 0, 0, 300, 300);
+  popMatrix();
+
+  pushMatrix();
+  translate(723, 423);
+  rotate(radians(angleRotateEgguille1));
+  image(egguille1, 0, 0, 300, 300);
   popMatrix();
 
   pushMatrix();
@@ -309,15 +428,7 @@ void mecanism() {
   }else{
     image(btn_rouge, 0, 0, 0, 0);
   }
-  
   popMatrix();
-  
-  for (int i = 0; i < 3; i = i+1) {
-    pushMatrix();
-    translate(1085, 185 + i*120);
-    image(button, 0, 0, 110, 110);
-    popMatrix();
-  }
 
   if(motorGear.isPlaced && rightGear.isPlaced){
     if(motorGear.isDrag || rightGear.isDrag){
@@ -349,6 +460,52 @@ void mecanism() {
     motorGear.drag(true, true, false);
   }else{
     motorGear.drag(true, true, true);
+  }
+
+
+  btn1.onClick();
+  btn2.onClick();
+  btn3.onClick();
+  answerIsGood = true;
+  for(int i = 0; i<actuel.size(); i++){
+    if(actuel.get(i) != reponse.get(i)){
+      answerIsGood = false;
+    }
+  }
+  if(answerIsGood == false){
+    actuel = new IntList();
+
+    btn1.reset();
+    btn2.reset();
+    btn3.reset();
+  }
+
+  if(answerIsGood && actuel.size() == 3){
+    
+    if(speedRotateEgguille1 < 300 && premier_tour == false){
+      speedRotateEgguille1 = speedRotateEgguille1*1.2;
+      speedRotateEgguille2 = speedRotateEgguille1*1.2;
+      if(speedRotateEgguille1 > 300){
+        premier_tour = true;
+      }
+    }else{
+      print(deuxieme_tour);
+      if(deuxieme_tour == false){
+        speedRotateEgguille1 = speedRotateEgguille1/1.3;
+        speedRotateEgguille2 = speedRotateEgguille1/1.3;
+        print(speedRotateEgguille1);
+        if(speedRotateEgguille1 < 0.5){
+          deuxieme_tour = true;
+        }
+      }else{
+        speedRotateEgguille1 = 0.7;
+        speedRotateEgguille2 = 5;
+      }
+      
+    }
+    angleRotateEgguille1 += speedRotateEgguille1;
+    angleRotateEgguille2 += speedRotateEgguille2;
+    delay(60000);
   }
 
   lever_cut.drag();
