@@ -463,49 +463,75 @@ void mecanism() {
   }
 
 
-  btn1.onClick();
-  btn2.onClick();
-  btn3.onClick();
-  answerIsGood = true;
-  for(int i = 0; i<actuel.size(); i++){
-    if(actuel.get(i) != reponse.get(i)){
-      answerIsGood = false;
+  if(canBePush){
+    btn1.onClick();
+    btn2.onClick();
+    btn3.onClick();
+    answerIsGood = true;
+    for(int i = 0; i<actuel.size(); i++){
+      if(actuel.get(i) != reponse.get(i)){
+        answerIsGood = false;
+      }
     }
-  }
-  if(answerIsGood == false){
+    if(answerIsGood == false){
+      actuel = new IntList();
+
+      btn1.reset();
+      btn2.reset();
+      btn3.reset();
+    }
+
+    if(answerIsGood && actuel.size() == 3){
+      if(speedRotateEgguille1 < 300 && premier_tour == false){
+        speedRotateEgguille1 = speedRotateEgguille1*1.2;
+        speedRotateEgguille2 = speedRotateEgguille1*1.2;
+        if(speedRotateEgguille1 > 300){
+          premier_tour = true;
+        }
+      }else{
+        if(deuxieme_tour == false){
+          speedRotateEgguille1 = speedRotateEgguille1/1.3;
+          speedRotateEgguille2 = speedRotateEgguille1/1.3;
+          if(speedRotateEgguille1 < 0.5){
+            deuxieme_tour = true;
+          }
+        }else{
+          print(minute());
+          if(minute() % 1 == 0){
+            speedRotateEgguille1 = 0.7;
+            speedRotateEgguille2 = 5;
+          }else{
+            speedRotateEgguille1 = 0;
+            speedRotateEgguille2 = 0;
+          }
+        }
+        
+      }
+      angleRotateEgguille1 += speedRotateEgguille1;
+      angleRotateEgguille2 += speedRotateEgguille2;
+      
+    }
+  }else{
+    pushMatrix();
+    translate(1085, 185);
+    image(button, 0, 0, 110, 110);
+    popMatrix();
+
+    pushMatrix();
+    translate(1085, 185+120);
+    image(button, 0, 0, 110, 110);
+    popMatrix();
+
+    pushMatrix();
+    translate(1085, 185+240);
+    image(button, 0, 0, 110, 110);
+    popMatrix();
+
     actuel = new IntList();
 
     btn1.reset();
     btn2.reset();
     btn3.reset();
-  }
-
-  if(answerIsGood && actuel.size() == 3){
-    
-    if(speedRotateEgguille1 < 300 && premier_tour == false){
-      speedRotateEgguille1 = speedRotateEgguille1*1.2;
-      speedRotateEgguille2 = speedRotateEgguille1*1.2;
-      if(speedRotateEgguille1 > 300){
-        premier_tour = true;
-      }
-    }else{
-      print(deuxieme_tour);
-      if(deuxieme_tour == false){
-        speedRotateEgguille1 = speedRotateEgguille1/1.3;
-        speedRotateEgguille2 = speedRotateEgguille1/1.3;
-        print(speedRotateEgguille1);
-        if(speedRotateEgguille1 < 0.5){
-          deuxieme_tour = true;
-        }
-      }else{
-        speedRotateEgguille1 = 0.7;
-        speedRotateEgguille2 = 5;
-      }
-      
-    }
-    angleRotateEgguille1 += speedRotateEgguille1;
-    angleRotateEgguille2 += speedRotateEgguille2;
-    delay(60000);
   }
 
   lever_cut.drag();
