@@ -14,6 +14,8 @@ float speedRotateEgguille1 = 0.1;
 float speedRotateEgguille2 = 0.1;
 boolean premier_tour = false;
 boolean deuxieme_tour = false;
+int minute = -1;
+boolean isDraggable = true;
 
 //Création d'une classe ImageDragNDrop
 class ImageDragNDrop{
@@ -433,33 +435,57 @@ void mecanism() {
   if(motorGear.isPlaced && rightGear.isPlaced){
     if(motorGear.isDrag || rightGear.isDrag){
       middleGear.drag(true, true, false);
+      isDraggable = false;
     }else{
       middleGear.drag(true, true, true);
+      isDraggable = true;
     }
   }else{
     if(motorGear.isDrag || rightGear.isDrag || lever_cut.isDrag){
       middleGear.drag(true, false, false);
+      if(lever_cut.isDrag == false){
+        isDraggable = false;
+      }
     }else{
       middleGear.drag(true, false, true);
+      isDraggable = true;
+
     }
   }
   if(motorGear.isPlaced && middleGear.isPlaced){
     if(motorGear.isDrag || middleGear.isDrag || lever_cut.isDrag){
       rightGear.drag(true, true, false);
+      if(lever_cut.isDrag == false){
+        isDraggable = false;
+      }
+
     }else{
       rightGear.drag(true, true, true);
+      isDraggable = true;
+
     }
   }else{
     if(motorGear.isDrag || middleGear.isDrag || lever_cut.isDrag){
       rightGear.drag(false, true, false);
+      isDraggable = false;
+      if(lever_cut.isDrag == false){
+        isDraggable = false;
+      }
+
     }else{
       rightGear.drag(false, true, true);
+      isDraggable = true;
     }
   }
   if(middleGear.isDrag || rightGear.isDrag || lever_cut.isDrag){
     motorGear.drag(true, true, false);
+    if(lever_cut.isDrag == false){
+      isDraggable = false;
+    }
+
   }else{
     motorGear.drag(true, true, true);
+    isDraggable = true;
   }
 
 
@@ -496,10 +522,10 @@ void mecanism() {
             deuxieme_tour = true;
           }
         }else{
-          print(minute());
-          if(minute() % 1 == 0){
+          if(minute() > minute){
             speedRotateEgguille1 = 0.7;
             speedRotateEgguille2 = 5;
+            minute = minute();
           }else{
             speedRotateEgguille1 = 0;
             speedRotateEgguille2 = 0;
@@ -533,12 +559,13 @@ void mecanism() {
     btn2.reset();
     btn3.reset();
   }
-
+  
   lever_cut.drag();
 
   angleRotate += speedRotate;
 }
 
+//fontion qui fait un engrenage
 void makeGear(PImage img, float x, float y, float scale_x, float scale_y, int direction, boolean rotate) {
   pushMatrix();
   translate(x, y);
