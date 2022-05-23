@@ -16,6 +16,10 @@ boolean premier_tour = false;
 boolean deuxieme_tour = false;
 int minute = -1;
 boolean isDraggable = true;
+import processing.sound.*;
+SoundFile gear_clink, running_gear, button_click, cuckoo, tic_tac;
+float volume = 0.0;
+boolean cuckoo_played = false;
 
 //Création d'une classe ImageDragNDrop
 class ImageDragNDrop{
@@ -111,6 +115,7 @@ class ImageDragNDrop{
           }else if(isCollide(this.ix, this.iy, this.hx, this.hy, this.hw, this.hh) && this.isPlaced == false && canBePlaced){
             this.isPlaced = true;
             this.isDrag = false;
+            gear_clink.play();
           }else{
             image(this.image, this.ix, this.iy, this.w, this.h);
             setHitboxPosition(bx, by);
@@ -194,8 +199,11 @@ class Bouton{
       if(mousePressed){
         if(isClicked == false){
           isClicked = true;
-          
           actuel.append(this.num);
+          if(!button_click.isPlaying()){
+            button_click.play();
+          }
+          
         }
         
       }
@@ -219,6 +227,7 @@ class Bouton{
     translate(this.x, this.y);
     image(this.unclicked, 0, 0, this.uw, this.uh);
     popMatrix();
+    
   }
 
   void reset(){
@@ -279,8 +288,14 @@ class ImageRotate{
         this.angleRotate = angleRotate;
         if(this.x-50 > mouseX && this.angleRotate > -40){
           this.angleRotate -= 2;
+          if(volume > -1){
+            volume -= 0.003333;
+          }
         }else if(this.x+50 < mouseX && this.angleRotate < 300){
           this.angleRotate += 2;
+          if(volume < 1){
+            volume += 0.003333;
+          }
         }
         speedRotate = angleRotate/50;
         setHitboxPosition(mouseX, mouseY);
@@ -369,6 +384,12 @@ void setup()
   setAllImages();
   setAllGears();
   setBoutons();
+  cuckoo = new SoundFile(this, "cuckoo.wav");
+  //tic_tac = new SoundFile(this, "clock.mp3");
+  gear_clink = new SoundFile(this, "gear_clink.wav");
+  running_gear = new SoundFile(this, "running_gear.wav");
+  running_gear.loop();
+  button_click = new SoundFile(this, "button_click.wav");
   imageMode(CENTER);
   frameRate(100);
 }
@@ -513,6 +534,10 @@ void mecanism() {
         speedRotateEgguille2 = speedRotateEgguille1*1.2;
         if(speedRotateEgguille1 > 300){
           premier_tour = true;
+          if(cuckoo_played == false){
+            cuckoo.play();
+            cuckoo_played = true;
+          }
         }
       }else{
         if(deuxieme_tour == false){
@@ -520,6 +545,7 @@ void mecanism() {
           speedRotateEgguille2 = speedRotateEgguille1/1.3;
           if(speedRotateEgguille1 < 0.5){
             deuxieme_tour = true;
+            //tic_tac.play();
           }
         }else{
           if(minute() > minute){
@@ -561,11 +587,12 @@ void mecanism() {
   }
   
   lever_cut.drag();
+  running_gear.amp(volume);
 
   angleRotate += speedRotate;
 }
 
-//fontion qui fait un engrenage
+//fontion qui fait un engrenage!
 void makeGear(PImage img, float x, float y, float scale_x, float scale_y, int direction, boolean rotate) {
   pushMatrix();
   translate(x, y);
