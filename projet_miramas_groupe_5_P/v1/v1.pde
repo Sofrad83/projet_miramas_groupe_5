@@ -15,11 +15,11 @@ float speedRotateEgguille2 = 0.1;
 boolean premier_tour = false;
 boolean deuxieme_tour = false;
 int minute = -1;
-boolean isDraggable = true;
 import processing.sound.*;
-SoundFile gear_clink, running_gear, button_click, cuckoo, tic_tac;
+SoundFile gear_clink, running_gear, button_click, cuckoo;
 float volume = 0.0;
 boolean cuckoo_played = false;
+boolean is_finish = false;
 
 //Création d'une classe ImageDragNDrop
 class ImageDragNDrop{
@@ -203,9 +203,7 @@ class Bouton{
           if(!button_click.isPlaying()){
             button_click.play();
           }
-          
         }
-        
       }
     }
     if(isClicked){
@@ -273,7 +271,7 @@ class ImageRotate{
     this.w = w;
     this.h = h;
     
-    this.angleRotate = 0.0;
+    this.angleRotate = -40.0;
     this.isDrag = false;
   }
 
@@ -282,22 +280,22 @@ class ImageRotate{
     image(this.image, this.x, this.y, this.w, this.h);
   }
 
-  void drag(){
+  void drag(boolean canBeDrag){
     if(isCollide(mouseX, mouseY, this.sx, this.sy, this.sw, this.sh)){
-      if(mousePressed){
+      if(mousePressed && canBeDrag){
         this.angleRotate = angleRotate;
-        if(this.x-50 > mouseX && this.angleRotate > -40){
+        if(this.x-50 > mouseX){
           this.angleRotate -= 2;
           if(volume > -1){
             volume -= 0.003333;
           }
-        }else if(this.x+50 < mouseX && this.angleRotate < 300){
+        }else if(this.x+50 < mouseX){
           this.angleRotate += 2;
           if(volume < 1){
             volume += 0.003333;
           }
         }
-        speedRotate = angleRotate/50;
+        speedRotate = angleRotate/10;
         setHitboxPosition(mouseX, mouseY);
         pushMatrix();
         translate(this.x, this.y);
@@ -385,7 +383,6 @@ void setup()
   setAllGears();
   setBoutons();
   cuckoo = new SoundFile(this, "cuckoo.wav");
-  //tic_tac = new SoundFile(this, "clock.mp3");
   gear_clink = new SoundFile(this, "gear_clink.wav");
   running_gear = new SoundFile(this, "running_gear.wav");
   running_gear.loop();
@@ -426,7 +423,7 @@ void mecanism() {
 
   pushMatrix();
   translate(482, 429);
-  if(speedRotate >= 6.0){
+  if(speedRotate >= 24.0 && speedRotate < 28.0){
     canBePush = true;
     image(btn_vert, 0, 0, 55, 55);
   }else{
@@ -437,7 +434,7 @@ void mecanism() {
   
   pushMatrix();
   translate(482, 429);
-  if(speedRotate >= 2.4 && speedRotate < 6.0){
+  if((speedRotate >= 9.6 && speedRotate < 24.0) || (speedRotate >= 28.0 && speedRotate < 36.0)){
     image(btn_orange, 0, 0, 55, 55);
   }else{
     image(btn_orange, 0, 0, 0, 0);
@@ -446,69 +443,20 @@ void mecanism() {
 
   pushMatrix();
   translate(482, 429);
-  if(speedRotate < 2.4){
+  if(speedRotate < 9.6 || speedRotate > 36.0){
     image(btn_rouge, 0, 0, 55, 55);
   }else{
     image(btn_rouge, 0, 0, 0, 0);
   }
   popMatrix();
 
-  if(motorGear.isPlaced && rightGear.isPlaced){
-    if(motorGear.isDrag || rightGear.isDrag){
-      middleGear.drag(true, true, false);
-      isDraggable = false;
-    }else{
-      middleGear.drag(true, true, true);
-      isDraggable = true;
-    }
+  pushMatrix();
+  if(motorGear.isDrag || rightGear.isDrag || middleGear.isDrag || is_finish){
+    lever_cut.drag(false);
   }else{
-    if(motorGear.isDrag || rightGear.isDrag || lever_cut.isDrag){
-      middleGear.drag(true, false, false);
-      if(lever_cut.isDrag == false){
-        isDraggable = false;
-      }
-    }else{
-      middleGear.drag(true, false, true);
-      isDraggable = true;
-
-    }
+    lever_cut.drag(true);
   }
-  if(motorGear.isPlaced && middleGear.isPlaced){
-    if(motorGear.isDrag || middleGear.isDrag || lever_cut.isDrag){
-      rightGear.drag(true, true, false);
-      if(lever_cut.isDrag == false){
-        isDraggable = false;
-      }
-
-    }else{
-      rightGear.drag(true, true, true);
-      isDraggable = true;
-
-    }
-  }else{
-    if(motorGear.isDrag || middleGear.isDrag || lever_cut.isDrag){
-      rightGear.drag(false, true, false);
-      isDraggable = false;
-      if(lever_cut.isDrag == false){
-        isDraggable = false;
-      }
-
-    }else{
-      rightGear.drag(false, true, true);
-      isDraggable = true;
-    }
-  }
-  if(middleGear.isDrag || rightGear.isDrag || lever_cut.isDrag){
-    motorGear.drag(true, true, false);
-    if(lever_cut.isDrag == false){
-      isDraggable = false;
-    }
-
-  }else{
-    motorGear.drag(true, true, true);
-    isDraggable = true;
-  }
-
+  popMatrix();
 
   if(canBePush){
     btn1.onClick();
@@ -527,7 +475,6 @@ void mecanism() {
       btn2.reset();
       btn3.reset();
     }
-
     if(answerIsGood && actuel.size() == 3){
       if(speedRotateEgguille1 < 300 && premier_tour == false){
         speedRotateEgguille1 = speedRotateEgguille1*1.2;
@@ -545,7 +492,8 @@ void mecanism() {
           speedRotateEgguille2 = speedRotateEgguille1/1.3;
           if(speedRotateEgguille1 < 0.5){
             deuxieme_tour = true;
-            //tic_tac.play();
+            is_finish = true;
+            canBePush = false;
           }
         }else{
           if(minute() > minute){
@@ -584,9 +532,44 @@ void mecanism() {
     btn1.reset();
     btn2.reset();
     btn3.reset();
+    premier_tour = false;
+    deuxieme_tour = false;
   }
-  
-  lever_cut.drag();
+
+  if(motorGear.isPlaced && rightGear.isPlaced){
+    if(motorGear.isDrag || rightGear.isDrag){
+      middleGear.drag(true, true, false);
+    }else{
+      middleGear.drag(true, true, true);
+    }
+  }else{
+    if(motorGear.isDrag || rightGear.isDrag || lever_cut.isDrag){
+      middleGear.drag(true, false, false);
+    }else{
+      middleGear.drag(true, false, true);
+    }
+  }
+  if(motorGear.isPlaced && middleGear.isPlaced){
+    if(motorGear.isDrag || middleGear.isDrag || lever_cut.isDrag){
+      rightGear.drag(true, true, false);
+    }else{
+      rightGear.drag(true, true, true);
+    }
+  }else{
+    if(motorGear.isDrag || middleGear.isDrag || lever_cut.isDrag){
+      rightGear.drag(false, true, false);
+
+    }else{
+      rightGear.drag(false, true, true);
+    }
+  }
+  if(middleGear.isDrag || rightGear.isDrag || lever_cut.isDrag){
+    motorGear.drag(true, true, false);
+
+  }else{
+    motorGear.drag(true, true, true);
+  }
+
   running_gear.amp(volume);
 
   angleRotate += speedRotate;
